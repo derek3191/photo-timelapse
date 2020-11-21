@@ -1,0 +1,19 @@
+{
+  "name": "daily-pics",
+  "version": "1.0.0",
+  "description": "",
+  "main": "movieBuilder.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "exif": "^0.6.0",
+    "ffmpeg": "0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "rxjs": "^6.6.3",
+    "video-stitch": "^1.6.0",
+    "videoshow": "^0.1.12"
+  }
+}
