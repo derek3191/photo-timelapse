@@ -33,19 +33,19 @@ const copyFile = util.promisify(fs.copyFile);
             const tmpFileDir = `${__dirname}/tmp`;
 
             for(let file of fileList) {
-                let isMinSize = file._exif.exif.ExifImageWidth === minWidth && file._exif.exif.ExifImageHeight === minHeight;
+                let isMinSize = file.exif.exif.ExifImageWidth === minWidth && file.exif.exif.ExifImageHeight === minHeight;
                 
                 if (!isMinSize){
-                    var tmpFilePath = `${tmpFileDir}/${file._filename}.JPG`;
+                    var tmpFilePath = `${tmpFileDir}/${file.filename}.JPG`;
                         
-                    await sharp(file._jpgPath)
+                    await sharp(file.jpgPath)
                         .resize(minWidth, minHeight)
                         .withMetadata()
                         .toFile(tmpFilePath);
                         
-                    console.log(`copying ${tmpFilePath} to ${file._jpgPath}`);
+                    console.log(`copying ${tmpFilePath} to ${file.jpgPath}`);
                     
-                    await copyFile(tmpFilePath, file._jpgPath);
+                    await copyFile(tmpFilePath, file.jpgPath);
                     
                 }
             };
@@ -64,15 +64,15 @@ const copyFile = util.promisify(fs.copyFile);
             // sort the files 
             result.fileList.sort(compareFileDates)
             
-            createVideo(result.fileList.map(x => x._jpgPath), result.width, result.height);
+            createVideo(result.fileList.map(x => x.jpgPath), result.width, result.height);
         })
 })();
 
 function compareFileDates(a, b) {
-    if (a._exif.exif.DateTimeOriginal < b._exif.exif.DateTimeOriginal){
+    if (a.exif.exif.DateTimeOriginal < b.exif.exif.DateTimeOriginal){
         return -1;
     }
-    if (a._exif.exif.DateTimeOriginal > b._exif.exif.DateTimeOriginal){
+    if (a.exif.exif.DateTimeOriginal > b.exif.exif.DateTimeOriginal){
         return 1;
     }
     return 0;
@@ -82,12 +82,12 @@ function getFileSizes(fileList){
     let dimensionSet = new Set();
     fileList.forEach((file) => {
         try {
-            const key = `${file._exif.exif.ExifImageWidth}x${file._exif.exif.ExifImageHeight}`;
+            const key = `${file.exif.exif.ExifImageWidth}x${file.exif.exif.ExifImageHeight}`;
             if (!dimensionSet.has(key)){
                 dimensionSet.add(key);
             }
         } catch (error) {
-            // console.log(`${file._filename} cannot be getting the file size`)
+            // console.log(`${file.filename} cannot be getting the file size`)
         }
     });
     return [...dimensionSet].sort();

@@ -5,17 +5,17 @@ const ExifImage = require('exif').ExifImage;
 
 class FileDetail{
     constructor(path, filename, extensions){
-        this._filename = filename || null;
-        this._extensions = extensions || null;
-        this._path = path;
-        this._jpgPath = extensions.includes('JPG') ? `${this._path}/${this._filename}.JPG` : null;
-        this._movPath = extensions.includes('mov') ? `${this._path}/${this._filename}.mov` : null;
+        this.filename = filename || null;
+        this.extensions = extensions || null;
+        this.path = path;
+        this.jpgPath = extensions.includes('JPG') ? `${this.path}/${this.filename}.JPG` : null;
+        this.movPath = extensions.includes('mov') ? `${this.path}/${this.filename}.mov` : null;
     }
 
     
     initialize(){
         //(result => {
-            // this._exif = result;
+            // this.exif = result;
             
             // this._month = this.getMonth()
             
@@ -23,10 +23,10 @@ class FileDetail{
             // });
             return new Promise((resolve, reject) => {
                 try {
-                    this.exifPromise(this._jpgPath)
+                    this.exifPromise(this.jpgPath)
                         .then((result) => {
                             // console.log(result);
-                            this._exif = result;
+                            this.exif = result;
                             resolve(this);
                         })
                         .catch((error) => {
@@ -57,12 +57,12 @@ class FileDetail{
     
         
     addExtension(extension){
-        this._extensions.push(extension);
-        if (this._jpgPath === null && this._extensions.includes('JPG')){
-            this._jpgPath = `${this._path}/${this._filename}.JPG`;
+        this.extensions.push(extension);
+        if (this.jpgPath === null && this.extensions.includes('JPG')){
+            this.jpgPath = `${this.path}/${this.filename}.JPG`;
         } 
-        if (this._movPath === null && this._extensions.includes('mov')){
-            this._movPath = `${this._path}/${this._filename}.mov`;
+        if (this.movPath === null && this.extensions.includes('mov')){
+            this.movPath = `${this.path}/${this.filename}.mov`;
         }
     }
 
@@ -70,21 +70,21 @@ class FileDetail{
         // const startingMonth = 10;
         // const startingYear = 2019;
 
-        // let pictureDateSegments = this._exif.DateTimeOriginal.split(' ')[0].split(':');
+        // let pictureDateSegments = this.exif.DateTimeOriginal.split(' ')[0].split(':');
         // let pictureMonth = pictureDateSegments[1];
         // let pictureYear = pictureDateSegments[0];
         // let picture
-        var pictureDateSegments = this._exif.DateTimeOriginal.split(' ')[0].split(':');
+        var pictureDateSegments = this.exif.DateTimeOriginal.split(' ')[0].split(':');
         var pictureDate = new Date(`${pictureDateSegments[1]}/${pictureDateSegments[2]}/${pictureDateSegments[0]}`);
 
         var newDate = new Date(pictureDate.setMonth(pictureDate.getMonth()+1));
-        //console.log(`${this._exif.DateTimeOriginal}|${pictureDate} +1month = ${newDate}`)
+        //console.log(`${this.exif.DateTimeOriginal}|${pictureDate} +1month = ${newDate}`)
 
     }
 
     getDays(){
         var birthdate = new Date("10/25/2019"); 
-        var pictureDateSegments = this._exif.DateTimeOriginal.split(' ')[0].split(':');
+        var pictureDateSegments = this.exif.DateTimeOriginal.split(' ')[0].split(':');
         var pictureDate = new Date(`${pictureDateSegments[1]}/${pictureDateSegments[2]}/${pictureDateSegments[0]}`);
 
         var diffInTime = pictureDate.getTime() - birthdate.getTime();         
