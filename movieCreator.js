@@ -64,7 +64,7 @@ const copyFile = util.promisify(fs.copyFile);
             // sort the files 
             result.fileList.sort(compareFileDates)
             
-            createVideo(result.fileList);
+            createVideo(result.fileList.map(x => x._jpgPath), result.width, result.height);
         })
 })();
 
@@ -125,23 +125,20 @@ async function getJpgFilenames(imgPath){
     return fileMap;
 }
 
-function createVideo(images){
+function createVideo(images, width, height){
     var videoOptions = {
+        //fps: 25,
         fps: 25,
-        loop: 2, // seconds
+        loop: '00.500', //loop duration in seconds or as a '[[hh:]mm:]ss[.xxx]' string
         transition: false,
-        //transitionDuration: 1, // seconds
         videoBitrate: 1024,
         videoCodec: 'libx264',
-        size: '1536x2048',
         audioBitrate: '128k',
         audioChannels: 2,
         format: 'mov',
         pixelFormat: 'yuv420p'
     }
     
-    images = images.slice(0, 20);
-    console.log(`about to build movie from ${images.length} pics`);
       videoshow(images, videoOptions)
         //.audio('song.mp3')
         .save('video.mov')
