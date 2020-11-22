@@ -1,6 +1,7 @@
 node_modules/
 img/
-
+imgSrc/
+tmp/
 
 *.mov
 *.mp4

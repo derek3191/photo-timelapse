@@ -13,6 +13,7 @@
     "ffmpeg": "0.0.4",
     "fluent-ffmpeg": "^2.1.2",
     "rxjs": "^6.6.3",
+    "sharp": "^0.26.3",
     "video-stitch": "^1.6.0",
     "videoshow": "^0.1.12"
   }

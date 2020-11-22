@@ -2,99 +2,97 @@ const FileDetail = require('./fileDetail');
 const fs = require('fs');
 const util = require('util');
 const videoshow = require('videoshow');
-const { create } = require('domain');
+const sharp = require('sharp');
 
 const readdir = util.promisify(fs.readdir);
-let fileList = null;
-
-// (async () => {
-//     getJpgFilenames(`${__dirname}/img`).then((result) => {
-//         fileList = result;
-        
-//         // Get more data for the files
-
-//         // Actually create the video
-//         //createVideo([...result]);
-//     }).then(() => {
-//         fileList.forEach((val, i) => {
-//             try {
-//                 val.initialize()
-//                     .then((result) => {
-//                         fileList.set(i, result);
-//                         console.log(val);
-//                     });                
-//             } catch (error) {
-//                 console.log(`error initializing... ${error}`);
-//             }
-//         });
-
-//         return fileList;
-//     }).then((val) => {
-//         console.log(val);
-//     });
-//     // console.log(`jpgFiles: ${jpgFiles.size}`);
-    
-    
-// })();
+const copyFile = util.promisify(fs.copyFile);
 
 (async () => {
     getJpgFilenames(`${__dirname}/img`)
-        // .then(async (fileList) => {
-        //     // Get more data for the files
-        //     for (let [fileKey, fileValue] of fileList){
-        //         try {
-        //             let newFileValue = await fileValue.initialize();
-        //             await fileList.set(fileKey, newFileValue);                
-        //         } catch (error) {
-        //             console.log(`error initializing... ${error}`);
-        //         }
-        //     }
-        //     return fileList;
-        // })
         .then(async (fileMap) => {
             // Get more data for the files
             for (let [fileKey, fileValue] of fileMap){
                 try {
-                    let newFileValue = await fileValue.initialize();
-                    await fileMap.set(fileKey, newFileValue);                
+                   let newFileValue = await fileValue.initialize();
+                   await fileMap.set(fileKey, newFileValue);                
                 } catch (error) {
                     console.log(`error initializing... ${error}`);
                 }
             }
+
+            // Return it as an array since we aren't looking for files anymore
+            // no need to have the key value pair
             return Array.from(fileMap.values());
         })
-        .then((fileList) => {
+        .then(async (fileList) => {
             // Get a list of the filesizes
-            let smallImaages = [];
-            console.log(`v len is ${fileList.length}`)
-            fileList.forEach((v) => {
-                // if (v._exif.exif.ExifImageHeight === 2048 && v._exif.exif.ExifImageWidth == 1536){
-                //     smallImaages.push(v._jpgPath);
-                // }
-                // console.log(v);
-                // console.log(`${v._filename}\t${v._exif.exif.ExifImageWidth}x${v._exif.exif.ExifImageHeight}\t${v._exif.image.Orientation}`)
-            });
+            var minDimensions = (getFileSizes(fileList))[0];
+            var minWidth = parseInt(minDimensions.split('x')[0]);
+            var minHeight = parseInt(minDimensions.split('x')[1]);
 
-            // console.log(smallImaages);
-            // createVideo(smallImaages);
+            const tmpFileDir = `${__dirname}/tmp`;
+
+            for(let file of fileList) {
+                let isMinSize = file._exif.exif.ExifImageWidth === minWidth && file._exif.exif.ExifImageHeight === minHeight;
+                
+                if (!isMinSize){
+                    var tmpFilePath = `${tmpFileDir}/${file._filename}.JPG`;
+                        
+                    await sharp(file._jpgPath)
+                        .resize(minWidth, minHeight)
+                        .withMetadata()
+                        .toFile(tmpFilePath);
+                        
+                    console.log(`copying ${tmpFilePath} to ${file._jpgPath}`);
+                    
+                    await copyFile(tmpFilePath, file._jpgPath);
+                    
+                }
+            };
+
             
-            // console.log(`in the Then()... about to create the video of ${val.size} images`);
-            // Actually create the video
-            //createVideo([...result]);
-            jpgFilePaths = [];
-            for (let [k, v] of val.entries()){
-                // console.log(`i is ${k}, v is ${v._jpgPath}`);
-                jpgFilePaths.push(v._jpgPath);
-                // console.log(v);
+            return {
+                fileList: fileList,
+                minWidth: minWidth,
+                minHeight: minHeight
             }
-            // createVideo(jpgFilePaths.slice(0, 10));
-        });
-    
-    
+        })
+        .then((result) => {
+            console.log(`result mW, mH: ${result.minWidth}, ${result.minHeight}`);
+            console.log(`result fileList len ${result.fileList.length}`);
+
+            // sort the files 
+            result.fileList.sort(compareFileDates)
+            
+            createVideo(result.fileList);
+        })
 })();
 
+function compareFileDates(a, b) {
+    if (a._exif.exif.DateTimeOriginal < b._exif.exif.DateTimeOriginal){
+        return -1;
+    }
+    if (a._exif.exif.DateTimeOriginal > b._exif.exif.DateTimeOriginal){
+        return 1;
+    }
+    return 0;
+}
 
-
+function getFileSizes(fileList){
+    let dimensionSet = new Set();
+    fileList.forEach((file) => {
+        try {
+            const key = `${file._exif.exif.ExifImageWidth}x${file._exif.exif.ExifImageHeight}`;
+            if (!dimensionSet.has(key)){
+                dimensionSet.add(key);
+            }
+        } catch (error) {
+            // console.log(`${file._filename} cannot be getting the file size`)
+        }
+    });
+    return [...dimensionSet].sort();
+//    console.log(dimensionSet);
+}
 
 async function getJpgFilenames(imgPath){
     var fileMap = new Map();
@@ -103,27 +101,31 @@ async function getJpgFilenames(imgPath){
         // use the promisify'd version of fs.readdir so we can wait for everything
         var files = await readdir(imgPath);
         var imgDir = `${__dirname}/img`;
+
         for(let file of files){
             const splitName = file.split('.');
             const extension = splitName[1];
-            if (!fileMap.has(splitName[0])){
-                fileDetail = new FileDetail(imgDir, splitName[0], [extension]);
-                fileMap.set(splitName[0], fileDetail);
-            } else {
-                var fileDetail = fileMap.get(splitName[0]);
-                fileDetail.addExtension(extension);
-                fileMap.set(splitName[0], fileDetail);
+            if (extension.toLowerCase() === 'jpg' || extension.toLowerCase() === 'mov'){
+                if (!fileMap.has(splitName[0])){                
+                    fileDetail = new FileDetail(imgDir, splitName[0], [extension]);
+                    fileMap.set(splitName[0], fileDetail);
+                } else {
+                    // console.log(`updating  ${file}`);
+                    var fileDetail = fileMap.get(splitName[0]);
+                    fileDetail.addExtension(extension);
+                    fileMap.set(splitName[0], fileDetail);
+                }
             }
         }
         
     } catch (error) {
         console.log(error);
     }
+
     return fileMap;
 }
 
 function createVideo(images){
-    console.log(`about to build movie from ${images.length} pics`);
     var videoOptions = {
         fps: 25,
         loop: 2, // seconds
@@ -136,9 +138,11 @@ function createVideo(images){
         audioChannels: 2,
         format: 'mov',
         pixelFormat: 'yuv420p'
-      }
-      
-      videoshow(images.slice(0, 10), videoOptions)
+    }
+    
+    images = images.slice(0, 20);
+    console.log(`about to build movie from ${images.length} pics`);
+      videoshow(images, videoOptions)
         //.audio('song.mp3')
         .save('video.mov')
         .on('start', function (command) {
