@@ -45,8 +45,7 @@ const copyFile = util.promisify(fs.copyFile);
                         
                     console.log(`copying ${tmpFilePath} to ${file.jpgPath}`);
                     
-                    await copyFile(tmpFilePath, file.jpgPath);
-                    
+                    await copyFile(tmpFilePath, file.jpgPath);                    
                 }
             };
 
@@ -65,7 +64,7 @@ const copyFile = util.promisify(fs.copyFile);
             result.fileList.sort(compareFileDates)
             
             createVideo(result.fileList.map(x => x.jpgPath), result.width, result.height);
-        })
+        });
 })();
 
 function compareFileDates(a, b) {
@@ -125,9 +124,8 @@ async function getJpgFilenames(imgPath){
     return fileMap;
 }
 
-function createVideo(images, width, height){
+function createVideo(images){
     var videoOptions = {
-        //fps: 25,
         fps: 25,
         loop: '00.500', //loop duration in seconds or as a '[[hh:]mm:]ss[.xxx]' string
         transition: false,
@@ -140,7 +138,6 @@ function createVideo(images, width, height){
     }
     
       videoshow(images, videoOptions)
-        //.audio('song.mp3')
         .save('video.mov')
         .on('start', function (command) {
           console.log('ffmpeg process started:', command)
@@ -151,5 +148,5 @@ function createVideo(images, width, height){
         })
         .on('end', function (output) {
           console.error('Video created in:', output)
-        })
+        });
 }

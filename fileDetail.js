@@ -14,19 +14,12 @@ class FileDetail{
 
     
     initialize(){
-        //(result => {
-            // this.exif = result;
-            
-            // this._month = this.getMonth()
-            
-            // this._days = this.getDays();
-            // });
             return new Promise((resolve, reject) => {
                 try {
                     this.exifPromise(this.jpgPath)
                         .then((result) => {
-                            // console.log(result);
                             this.exif = result;
+                            this.days = this.getDays(this.exif);
                             resolve(this);
                         })
                         .catch((error) => {
@@ -66,25 +59,9 @@ class FileDetail{
         }
     }
 
-    getMonth(){
-        // const startingMonth = 10;
-        // const startingYear = 2019;
-
-        // let pictureDateSegments = this.exif.DateTimeOriginal.split(' ')[0].split(':');
-        // let pictureMonth = pictureDateSegments[1];
-        // let pictureYear = pictureDateSegments[0];
-        // let picture
-        var pictureDateSegments = this.exif.DateTimeOriginal.split(' ')[0].split(':');
-        var pictureDate = new Date(`${pictureDateSegments[1]}/${pictureDateSegments[2]}/${pictureDateSegments[0]}`);
-
-        var newDate = new Date(pictureDate.setMonth(pictureDate.getMonth()+1));
-        //console.log(`${this.exif.DateTimeOriginal}|${pictureDate} +1month = ${newDate}`)
-
-    }
-
-    getDays(){
+    getDays(exifData){
         var birthdate = new Date("10/25/2019"); 
-        var pictureDateSegments = this.exif.DateTimeOriginal.split(' ')[0].split(':');
+        var pictureDateSegments = exifData.exif.DateTimeOriginal.split(' ')[0].split(':');
         var pictureDate = new Date(`${pictureDateSegments[1]}/${pictureDateSegments[2]}/${pictureDateSegments[0]}`);
 
         var diffInTime = pictureDate.getTime() - birthdate.getTime();         
